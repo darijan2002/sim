@@ -17,48 +17,95 @@ enum class CELL_TYPE {
 struct Cell {
     CELL_TYPE type = CELL_TYPE::EMPTY;
     int index = -1;
+    int ipos = -1, jpos = -1;
 };
 
-int main() {
-    Cell field[N][N]{};
-    default_random_engine rng(chrono::system_clock::now().time_since_epoch().count());
+struct Cat : Cell {
+    static int CAT_INSTANCES;
+    int radius, cooldown, speed;
 
-    uniform_int_distribution<int> dist(0, N - 1);
-    vector<pair<int, int>> cats(N_CATS), mice(N_MICE);
+    Cat() : Cell() {
+        type = CELL_TYPE::CAT;
+        index = CAT_INSTANCES++;
+        radius = 1;
+        cooldown = 0;
+        speed = 2;
+    }
+
+    Cat(int i, int j) : Cat() {
+        ipos = i;
+        jpos = j;
+    }
+
+};
+int Cat::CAT_INSTANCES = 0;
+
+struct Mouse : Cell {
+    static int MOUSE_INSTANCES;
+
+    Mouse() : Cell() {
+        type = CELL_TYPE::MOUSE;
+        index = MOUSE_INSTANCES++;
+    }
+
+    Mouse(int i, int j) : Mouse() {
+        ipos = i;
+        jpos = j;
+    }
+};
+int Mouse::MOUSE_INSTANCES = 0;
+
+default_random_engine rng(chrono::system_clock::now().time_since_epoch().count());
+uniform_int_distribution<int> dist(0, N - 1);
+
+void putAnimalsOnRandomLocations(vector<Cat>& cats, vector<Mouse>& mice)
+{
+    CELL_TYPE field[N][N] {};
+
     for (int i = 0; i < N_CATS; i++) {
         int ti, tj;
         ti = dist(rng);
         tj = dist(rng);
-        while (field[ti][tj].type != CELL_TYPE::EMPTY) {
+        while (field[ti][tj] != CELL_TYPE::EMPTY) {
             ti = dist(rng);
             tj = dist(rng);
         }
 
-        field[ti][tj] = {CELL_TYPE::CAT, i};
-        cats[i] = {ti, tj};
+        // field[ti][tj] = {CELL_TYPE::CAT, i};
+        cats.emplace_back(ti, tj);
     }
     for (int i = 0; i < N_MICE; i++) {
         int ti, tj;
         ti = dist(rng);
         tj = dist(rng);
-        while (field[ti][tj].type != CELL_TYPE::EMPTY) {
+        while (field[ti][tj] != CELL_TYPE::EMPTY) {
             ti = dist(rng);
             tj = dist(rng);
         }
 
-        field[ti][tj] = {CELL_TYPE::MOUSE, i};
-        mice[i] = {ti, tj};
+        // field[ti][tj] = {CELL_TYPE::MOUSE, i};
+        mice.emplace_back(ti, tj);
     }
+}
 
-    char enum_to_char[] = {'.', 'C', 'M'};
-    for(int i = 0; i < N; i++)
-    {
-        for(int j = 0; j < N; j++)
-        {
-            cout << enum_to_char[(int)field[i][j].type];
-        }
-        cout << endl;
-    }
+void printField(vector<Cat> const& cats, vector<Mouse> const& mice)
+{
+    vector<string> field(N, string(N, '.'));
+    for(auto& c : cats) field[c.ipos][c.jpos] = 'C';
+    for(auto& m : mice) field[m.ipos][m.jpos] = 'M';
+
+    for(auto& str : field) cout << str << endl;
+}
+
+
+int main() {
+    // Cell* field[N][N];
+
+    vector<Cat> cats;
+    vector<Mouse> mice;
+    putAnimalsOnRandomLocations(cats, mice);
+
+    printField(cats, mice);
 
     return 0;
 }
